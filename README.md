@@ -11,7 +11,7 @@ installments, idempotent retries via `Idempotency-Key`, and a bank webhook that 
 payment status by strict transition rules. All money is integer kopecks, at least 5 pytest tests,
 plus an `AI_LOG.md` describing how AI tools were used.
 
-Optional extras implemented here: docker compose, webhook HMAC signature check, `GET /payments` with filters,
+Optional extras implemented here: docker compose, Alembic migrations, webhook HMAC signature check, `GET /payments` with filters,
 GitHub Actions (ruff + pytest) and assistant rules in `CLAUDE.md`.
 
 **Stack:** Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2.0, SQLite, pytest + httpx, ruff.
@@ -130,7 +130,7 @@ curl -s "localhost:8000/payments?email=me@example.com&status=succeeded"
   invalid input formats return the standard FastAPI 422.
 - **Sync endpoints + SQLite** keep the code simple; FastAPI runs them in a thread pool.
   Moving to PostgreSQL only needs a different `DATABASE_URL` and driver.
-- Tables are created on startup with `create_all`; Alembic was left out as optional.
+ - **Schema is managed by Alembic** (`migrations/`). Migrations run automatically on startup; `alembic upgrade head` and `alembic downgrade base` also work from the command line. A test checks that the migrations match the models.
 
 ## Project structure
 

@@ -12,7 +12,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.database import Base, DbSession, SessionLocal, engine
+from app.database import DbSession, SessionLocal
 from app.domain import (
     PaymentMethod,
     PaymentStatus,
@@ -20,6 +20,8 @@ from app.domain import (
     calculate_discount,
     can_transition,
 )
+
+from app.migrate import run_migrations
 from app.models import Payment, Tariff
 from app.schemas import PaymentCreate, PaymentOut, TariffOut, WebhookIn, WebhookOut
 from app.security import verify_signature
@@ -50,8 +52,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     Code before yield runs on startup, code after it runs on shutdown.
     """
-    # create tables if they do not exist yet
-    Base.metadata.create_all(engine)
+    # Apply Alembic migrations: creates the tables on the first run,
+    # later runs only apply new migrations.
+    run_migrations()
     with SessionLocal() as db:
         seed_tariffs(db)
     yield
