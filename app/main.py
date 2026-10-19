@@ -20,7 +20,6 @@ from app.domain import (
     calculate_discount,
     can_transition,
 )
-
 from app.migrate import run_migrations
 from app.models import Payment, Tariff
 from app.schemas import PaymentCreate, PaymentOut, TariffOut, WebhookIn, WebhookOut
