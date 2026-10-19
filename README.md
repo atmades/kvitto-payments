@@ -3,6 +3,17 @@
 A small payments service for an online school: tariffs, payments with promo codes and
 installments, idempotent payment creation and a signed bank webhook.
 
+## Task
+
+A take-home assignment for a Junior Python (FastAPI) position at Kvitto (time budget: ~3 hours).
+Build a payments API for an online school: tariffs, payment creation with a promo code and
+installments, idempotent retries via `Idempotency-Key`, and a bank webhook that changes the
+payment status by strict transition rules. All money is integer kopecks, at least 5 pytest tests,
+plus an `AI_LOG.md` describing how AI tools were used.
+
+Optional extras implemented here: webhook HMAC signature check, `GET /payments` with filters,
+GitHub Actions (ruff + pytest) and assistant rules in `CLAUDE.md`.
+
 **Stack:** Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2.0, SQLite, pytest + httpx, ruff.
 
 ## Run
