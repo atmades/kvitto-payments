@@ -12,7 +12,6 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-
 from app.database import Base, DbSession, SessionLocal, engine
 from app.domain import (
     PaymentMethod,
