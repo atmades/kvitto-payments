@@ -142,7 +142,11 @@ app/
   schemas.py    # Pydantic request/response schemas and validation
   database.py   # engine, sessions, get_db dependency
   security.py   # webhook signature check
-tests/          # 92 tests: domain, payments, idempotency, webhooks, list
+  migrate.py    # runs Alembic migrations from code
+migrations/     # Alembic migrations
+tests/          # 94 tests: domain, payments, idempotency, webhooks, list, migrations
+alembic.ini     # Alembic config for the command line
+Dockerfile, compose.yaml
 CLAUDE.md       # rules for AI assistants
 AI_LOG.md       # how AI was used
 ```
