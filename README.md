@@ -11,7 +11,7 @@ installments, idempotent retries via `Idempotency-Key`, and a bank webhook that 
 payment status by strict transition rules. All money is integer kopecks, at least 5 pytest tests,
 plus an `AI_LOG.md` describing how AI tools were used.
 
-Optional extras implemented here: webhook HMAC signature check, `GET /payments` with filters,
+Optional extras implemented here: docker compose, webhook HMAC signature check, `GET /payments` with filters,
 GitHub Actions (ruff + pytest) and assistant rules in `CLAUDE.md`.
 
 **Stack:** Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy 2.0, SQLite, pytest + httpx, ruff.
@@ -32,6 +32,16 @@ The SQLite database `kvitto.db` and the three tariffs are created on startup.
 `WEBHOOK_SECRET` is required only for `POST /webhooks/bank`: without it the webhook is rejected
 with 500 (unsigned webhooks are never accepted). `DATABASE_URL` is optional
 (default: `sqlite:///./kvitto.db`).
+
+### Run with Docker
+
+```bash
+docker compose up --build
+```
+
+The API starts at http://127.0.0.1:8000 with `WEBHOOK_SECRET=dev-secret` by default
+(override it with `WEBHOOK_SECRET=... docker compose up`). The SQLite database is stored
+in the `kvitto-data` volume; `docker compose down -v` removes it.
 
 ## Tests and linting
 
@@ -120,7 +130,7 @@ curl -s "localhost:8000/payments?email=me@example.com&status=succeeded"
   invalid input formats return the standard FastAPI 422.
 - **Sync endpoints + SQLite** keep the code simple; FastAPI runs them in a thread pool.
   Moving to PostgreSQL only needs a different `DATABASE_URL` and driver.
-- Tables are created on startup with `create_all`; Alembic and Docker were left out as optional.
+- Tables are created on startup with `create_all`; Alembic was left out as optional.
 
 ## Project structure
 

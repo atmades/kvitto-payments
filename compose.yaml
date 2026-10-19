@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # The SQLite file lives in a named volume, so data survives container restarts.
+      DATABASE_URL: sqlite:////data/kvitto.db
+      # Taken from your shell or .env file; "dev-secret" is a local-only default.
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-dev-secret}
+    volumes:
+      - kvitto-data:/data
+
+volumes:
+  kvitto-data:
