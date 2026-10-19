@@ -1,11 +1,10 @@
 """
 Business rules for money: promo code, discount, installment schedule.
 """
-# Promo codes: upper-case code -> discount in percent.
-# Adding a new promo code takes just one line here.
+
+from enum import StrEnum
 PROMO_CODES: dict[str, int] = {"KVITTO10": 10}
 
-# Allowed installment terms in months.
 INSTALLMENT_MONTHS: tuple[int, ...] = (3, 6, 12)
 
 
@@ -18,7 +17,6 @@ class UnknownPromoCodeError(ValueError):
 def normalize_promo_code(code: str | None) -> str | None:
     """
     Normalizes a promo code: strips surrounding spaces, converts to upper case.
-
     " kvitto10 " -> "KVITTO10"; None and "" -> None (no promo code given).
     """
     if code is None:
@@ -58,3 +56,49 @@ def build_schedule(amount: int, months: int) -> list[int]:
     # The first `remainder` payments get +1 kopeck, the rest get `base`.
     # The remainder is always less than months, so there is room for it.
     return [base + 1] * remainder + [base] * (months - remainder)
+
+
+class PaymentMethod(StrEnum):
+    """
+    Payment methods from the task.
+
+    StrEnum is an enum whose members are also plain strings:
+    PaymentMethod.CARD == "card". Pydantic rejects a typo like "crad" with 422.
+    """
+
+    CARD = "card"
+    SBP = "sbp"
+    INSTALLMENT = "installment"
+
+
+class PaymentStatus(StrEnum):
+    """
+    Payment statuses. A new payment always starts as pending.
+    """
+
+    PENDING = "pending"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+
+
+
+
+# Разрешённые переходы статусов: из какого статуса -> в какие можно перейти.
+# Всё, чего нет в таблице, запрещено, в том числе «переход» в тот же статус.
+# Allowed status transitions: from a status -> the statuses it may move to.
+# Anything missing from the table is forbidden, including "moving" to the same status.
+ALLOWED_TRANSITIONS: dict[PaymentStatus, frozenset[PaymentStatus]] = {
+    PaymentStatus.PENDING: frozenset({PaymentStatus.SUCCEEDED, PaymentStatus.FAILED}),
+    PaymentStatus.SUCCEEDED: frozenset({PaymentStatus.REFUNDED}),
+    PaymentStatus.FAILED: frozenset(),
+    PaymentStatus.REFUNDED: frozenset(),
+}
+
+
+def can_transition(current: PaymentStatus, new: PaymentStatus) -> bool:
+    """
+    Можно ли перевести платёж из статуса current в статус new.
+    Whether a payment may move from the current status to the new one.
+    """
+    return new in ALLOWED_TRANSITIONS[current]
