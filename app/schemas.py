@@ -99,7 +99,6 @@ class PaymentOut(BaseModel):
         return value
 
 
-
 class WebhookIn(BaseModel):
     """
     Тело вебхука от банка. Неизвестный статус — ответ 422.

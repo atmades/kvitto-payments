@@ -15,6 +15,7 @@ from app.domain import (
 # Tariff prices from the task, in kopecks.
 TARIFF_PRICES = [990000, 1990000, 2990000]
 
+
 # parametrize runs the same test several times with different data.
 @pytest.mark.parametrize(
     ("raw", "expected"),

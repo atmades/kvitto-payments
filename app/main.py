@@ -7,11 +7,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
 
 from app.database import Base, DbSession, SessionLocal, engine
 from app.domain import (
@@ -160,6 +161,39 @@ def create_payment(
         response.status_code = status.HTTP_200_OK
         return existing
     return payment
+
+
+@app.get("/payments", response_model=list[PaymentOut])
+def list_payments(
+    db: DbSession,
+    email: str | None = None,
+    # Тип PaymentStatus: неизвестный статус в фильтре сразу даёт 422.
+    # The PaymentStatus type makes an unknown status filter return a 422 at once.
+    status: PaymentStatus | None = None,
+    # Query(ge=..., le=...) ограничивает значения: limit от 1 до 100.
+    # Без ограничения один запрос мог бы выгрузить всю таблицу.
+    # Query(ge=..., le=...) bounds the values: limit from 1 to 100.
+    # Without a bound a single request could dump the whole table.
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[Payment]:
+    """
+    Список платежей с фильтрами по email и статусу, новые сверху.
+    A list of payments filtered by email and status, newest first.
+    """
+    query = select(Payment)
+    if email:
+        # Сравниваем без учёта регистра: Me@Example.com == me@example.com.
+        # Case-insensitive comparison: Me@Example.com == me@example.com.
+        query = query.where(func.lower(Payment.email) == email.strip().lower())
+    if status is not None:
+        query = query.where(Payment.status == status)
+    # Сортировка обязательна для пагинации: без неё порядок строк не гарантирован,
+    # и offset мог бы пропускать или повторять платежи.
+    # Sorting is required for pagination: without it the row order is not guaranteed,
+    # and offset could skip or repeat payments.
+    query = query.order_by(Payment.created_at.desc(), Payment.id).limit(limit).offset(offset)
+    return list(db.scalars(query))
 
 
 @app.get("/payments/{payment_id}", response_model=PaymentOut)

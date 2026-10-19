@@ -3,6 +3,7 @@ Business rules for money: promo code, discount, installment schedule.
 """
 
 from enum import StrEnum
+
 PROMO_CODES: dict[str, int] = {"KVITTO10": 10}
 
 INSTALLMENT_MONTHS: tuple[int, ...] = (3, 6, 12)
@@ -80,8 +81,6 @@ class PaymentStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     REFUNDED = "refunded"
-
-
 
 
 # Разрешённые переходы статусов: из какого статуса -> в какие можно перейти.

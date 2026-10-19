@@ -48,6 +48,7 @@ def get_db() -> Iterator[Session]:
     finally:
         db.close()
 
+
 # Shorthand for endpoints: "the db parameter is a session provided by get_db".
 # We write db: DbSession instead of db: Session = Depends(get_db) everywhere.
 DbSession = Annotated[Session, Depends(get_db)]
