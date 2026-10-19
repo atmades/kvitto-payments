@@ -1,5 +1,4 @@
 """
-Тесты эндпоинтов платежей через настоящие HTTP-запросы к приложению.
 Payment endpoint tests via real HTTP requests to the app.
 """
 
@@ -16,7 +15,6 @@ from app.models import Payment
 
 def payment_body(**overrides: Any) -> dict[str, Any]:
     """
-    Корректное тело запроса; в тесте можно поменять любое поле.
     A valid request body; a test can override any field.
     """
     body: dict[str, Any] = {
@@ -30,7 +28,6 @@ def payment_body(**overrides: Any) -> dict[str, Any]:
 
 def count_payments(db: Session) -> int:
     """
-    Сколько платежей сейчас в базе.
     How many payments are currently in the database.
     """
     return db.scalar(select(func.count()).select_from(Payment)) or 0
@@ -51,7 +48,6 @@ def test_create_payment_without_promo(client: TestClient) -> None:
 
     assert response.status_code == 201
     data = response.json()
-    # Проверяем содержимое ответа, а не только код.
     # We check the response content, not only the status code.
     assert data["amount"] == 1990000
     assert data["discount"] == 0
@@ -135,7 +131,6 @@ def test_get_payment_returns_same_payment(client: TestClient) -> None:
     response = client.get(f"/payments/{created['id']}")
 
     assert response.status_code == 200
-    # Ответ GET совпадает с ответом POST полностью, включая формат created_at.
     # The GET response fully matches the POST one, including created_at format.
     assert response.json() == created
 
@@ -155,7 +150,6 @@ def test_same_idempotency_key_does_not_create_duplicate(client: TestClient, db: 
     assert first.status_code == 201
     assert second.status_code == 200
     assert second.json() == first.json()
-    # Главная проверка: в базе ровно один платёж.
     # The key check: exactly one payment in the database.
     assert count_payments(db) == 1
 
@@ -178,9 +172,6 @@ def test_requests_without_key_always_create_payments(client: TestClient, db: Ses
 def test_race_between_check_and_insert_returns_existing_payment(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Имитируем гонку: при втором запросе проверка «ключа ещё нет» ошибается
-    # (как будто первый запрос ещё не успел сохраниться), и код доходит до
-    # вставки. Тогда должен сработать except IntegrityError.
     # Simulate a race: on the second request the "key not found yet" check is
     # wrong (as if the first request had not committed yet), so the code reaches
     # the insert. Then the except IntegrityError branch must kick in.
@@ -196,7 +187,6 @@ def test_race_between_check_and_insert_returns_existing_payment(
             return None
         return real_find(session, key)
 
-    # monkeypatch временно подменяет функцию только на время этого теста.
     # monkeypatch temporarily replaces the function for this test only.
     monkeypatch.setattr(app.main, "find_payment_by_key", find_misses_first_time)
 

@@ -1,5 +1,4 @@
 """
-Тесты списка платежей GET /payments с фильтрами.
 Tests for the payment list GET /payments with filters.
 """
 
@@ -27,7 +26,6 @@ def mark_succeeded(client: TestClient, payment_id: str) -> None:
 @pytest.fixture
 def three_payments(client: TestClient) -> dict[str, str]:
     """
-    Три платежа: два от anna (один оплачен), один от boris.
     Three payments: two from anna (one paid), one from boris.
     """
     ids = {
@@ -75,7 +73,6 @@ def test_filter_without_matches_returns_empty_list(
 
 
 def test_limit_and_offset(client: TestClient, three_payments: dict[str, str]) -> None:
-    # Две страницы по 2 платежа вместе дают все 3 платежа без повторов.
     # Two pages of 2 payments together give all 3 payments without repeats.
     first_page = client.get("/payments", params={"limit": 2}).json()
     second_page = client.get("/payments", params={"limit": 2, "offset": 2}).json()

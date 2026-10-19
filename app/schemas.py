@@ -101,7 +101,6 @@ class PaymentOut(BaseModel):
 
 class WebhookIn(BaseModel):
     """
-    Тело вебхука от банка. Неизвестный статус — ответ 422.
     Bank webhook body. An unknown status gets a 422.
     """
 
@@ -111,10 +110,8 @@ class WebhookIn(BaseModel):
 
 class WebhookOut(BaseModel):
     """
-    Ответ на успешный вебхук: {"result": "ok"}.
     Response to a successful webhook: {"result": "ok"}.
     """
 
-    # Literal["ok"] — поле может содержать только строку "ok".
     # Literal["ok"] means the field can only hold the string "ok".
     result: Literal["ok"]

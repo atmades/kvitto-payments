@@ -83,8 +83,6 @@ class PaymentStatus(StrEnum):
     REFUNDED = "refunded"
 
 
-# Разрешённые переходы статусов: из какого статуса -> в какие можно перейти.
-# Всё, чего нет в таблице, запрещено, в том числе «переход» в тот же статус.
 # Allowed status transitions: from a status -> the statuses it may move to.
 # Anything missing from the table is forbidden, including "moving" to the same status.
 ALLOWED_TRANSITIONS: dict[PaymentStatus, frozenset[PaymentStatus]] = {
@@ -97,7 +95,6 @@ ALLOWED_TRANSITIONS: dict[PaymentStatus, frozenset[PaymentStatus]] = {
 
 def can_transition(current: PaymentStatus, new: PaymentStatus) -> bool:
     """
-    Можно ли перевести платёж из статуса current в статус new.
     Whether a payment may move from the current status to the new one.
     """
     return new in ALLOWED_TRANSITIONS[current]

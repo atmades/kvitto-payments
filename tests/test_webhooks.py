@@ -1,5 +1,4 @@
 """
-Тесты вебхука банка: переходы статусов и проверка подписи.
 Bank webhook tests: status transitions and signature check.
 """
 
@@ -17,7 +16,6 @@ from app.domain import PaymentStatus
 from app.models import Payment
 from app.security import compute_signature
 
-# Цепочка вебхуков, которая приводит новый платёж в нужный статус.
 # The chain of webhooks that brings a new payment to the given status.
 PATH_TO_STATUS = {
     "pending": [],
@@ -29,7 +27,6 @@ PATH_TO_STATUS = {
 
 def create_payment(client: TestClient) -> str:
     """
-    Создаёт платёж и возвращает его id.
     Creates a payment and returns its id.
     """
     body = {"tariff_id": "basic", "email": "student@example.com", "method": "card"}
@@ -40,11 +37,8 @@ def send_webhook(
     client: TestClient, payment_id: str, new_status: str, signature: str | bytes | None = None
 ) -> Response:
     """
-    Отправляет вебхук. По умолчанию подписывает тело правильным секретом.
     Sends a webhook. By default the body is signed with the correct secret.
     """
-    # Сериализуем сами и отправляем именно эти байты (content=, а не json=),
-    # чтобы подпись точно считалась от того, что уйдёт на сервер.
     # We serialize ourselves and send exactly these bytes (content=, not json=),
     # so the signature is computed over what actually reaches the server.
     body = json.dumps({"payment_id": payment_id, "status": new_status}).encode()
@@ -60,7 +54,6 @@ def payment_status(client: TestClient, payment_id: str) -> str:
 
 def payment_in_status(client: TestClient, target: str) -> str:
     """
-    Новый платёж, доведённый вебхуками до статуса target.
     A new payment moved to the target status via webhooks.
     """
     payment_id = create_payment(client)
@@ -107,7 +100,6 @@ def test_forbidden_transition_returns_409_and_keeps_status(
 
     assert response.status_code == 409
     assert response.json() == {"error": "invalid_transition"}
-    # Главное: статус в базе не изменился.
     # The key point: the status in the database did not change.
     assert payment_status(client, payment_id) == old
 
@@ -133,7 +125,6 @@ def test_webhook_with_unknown_status_returns_422(client: TestClient) -> None:
         "",
         "0" * 64,
         compute_signature("wrong-secret", b"{}"),
-        # Не-ASCII символы: должен быть 401, а не падение сервера с 500.
         # Non-ASCII characters: must be a 401, not a server crash with a 500.
         "naïve-signature".encode(),
     ],
@@ -159,7 +150,6 @@ def test_missing_signature_header_returns_401(client: TestClient) -> None:
 
 
 def test_signature_of_different_body_returns_401(client: TestClient) -> None:
-    # Подпись снята с вебхука «failed», а тело подменено на «succeeded».
     # The signature was taken from a "failed" webhook, but the body says "succeeded".
     payment_id = create_payment(client)
     original = json.dumps({"payment_id": payment_id, "status": "failed"}).encode()
@@ -177,7 +167,6 @@ def test_webhook_rejected_when_secret_not_configured(
     payment_id = create_payment(client)
     body = json.dumps({"payment_id": payment_id, "status": "succeeded"}).encode()
     signature = compute_signature(os.environ["WEBHOOK_SECRET"], body)
-    # Убираем секрет только на время этого теста.
     # Remove the secret for this test only.
     monkeypatch.delenv("WEBHOOK_SECRET")
 
@@ -194,8 +183,6 @@ def test_webhook_rejected_when_secret_not_configured(
 def test_parallel_status_change_is_not_overwritten(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Имитируем гонку: пока наш вебхук «succeeded» проверяет переход,
-    # параллельный вебхук успевает перевести платёж в failed.
     # Simulate a race: while our "succeeded" webhook checks the transition,
     # a parallel webhook manages to move the payment to failed.
     payment_id = create_payment(client)
@@ -215,6 +202,5 @@ def test_parallel_status_change_is_not_overwritten(
     response = send_webhook(client, payment_id, "succeeded")
 
     assert response.status_code == 409
-    # Победил параллельный вебхук; наш не перезаписал его результат.
     # The parallel webhook won; ours did not overwrite its result.
     assert payment_status(client, payment_id) == "failed"

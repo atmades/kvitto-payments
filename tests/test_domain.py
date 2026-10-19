@@ -38,7 +38,6 @@ def test_no_promo_code_gives_zero_discount() -> None:
 
 @pytest.mark.parametrize("code", ["KVITTO10", "kvitto10", "Kvitto10"])
 def test_promo_code_is_case_insensitive(code: str) -> None:
-    # 10% от 1990000 = 199000
     # 10% of 1990000 = 199000
     assert calculate_discount(1990000, code) == 199000
 

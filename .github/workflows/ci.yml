@@ -1,4 +1,3 @@
-# Запускается на каждый push и pull request: линтер, формат и тесты.
 # Runs on every push and pull request: linter, formatting and tests.
 name: CI
 
